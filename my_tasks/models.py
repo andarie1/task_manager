@@ -48,24 +48,3 @@ class SubTask(models.Model):
     def __str__(self):
         return self.title
 
-
-# Категории
-categories = [
-    Category(name="Работа"),
-    Category(name="Учёба"),
-    Category(name="Личное")
-]
-
-# Задачи
-tasks = [
-    Task(title="Написать отчёт", description="Создать финальный отчёт для клиента", status="new", deadline="2025-03-01 12:00"),
-    Task(title="Подготовиться к экзамену", description="Пройти все тесты и конспекты", status="in_progress", deadline="2025-03-10 18:00"),
-    Task(title="Починить кран", description="Вызвать сантехника", status="pending", deadline="2025-02-20 09:00")
-]
-
-# Подзадачи
-subtasks = [
-    SubTask(title="Собрать данные", description="Собрать все исходные данные для отчёта", task=tasks[0], status="new", deadline="2025-02-28 10:00"),
-    SubTask(title="Решить пробные тесты", description="Пройти 5 пробных тестов", task=tasks[1], status="in_progress", deadline="2025-03-08 14:00"),
-    SubTask(title="Купить новые прокладки", description="Посетить магазин сантехники", task=tasks[2], status="pending", deadline="2025-02-19 16:00")
-]
