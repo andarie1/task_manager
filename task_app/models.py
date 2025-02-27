@@ -28,6 +28,12 @@ class Task(models.Model):
     deadline = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def short_title(self):
+        title_clean = self.title.strip()  # Убираем лишние пробелы
+        return f"{title_clean[:10]}..." if len(title_clean) > 10 else title_clean
+
+    short_title.short_description = "Short Title"
+
     class Meta:
         db_table = 'task_manager_task'
         ordering = ['-created_at']
