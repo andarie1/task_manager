@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Task
-from .serializers import TaskCreateSerializer, TaskSerializer, CategorySerializer
+from .serializers import TaskCreateSerializer, TaskSerializer, CategoryCreateSerializer, Category
 
 @api_view(["GET", "POST"])
 def tasks_list_create(request):
@@ -34,11 +34,26 @@ def task_detail(request, task_id):
 
 @api_view(['POST'])
 def category_create(request):
-    serializer = CategorySerializer(data=request.data)
+    serializer = CategoryCreateSerializer(data=request.data)
     if serializer.is_valid():
         category = serializer.save()
-        return Response({"id": category.id, "name": category.name}, status=status.HTTP_201_CREATED)
+        return Response(CategoryCreateSerializer(category).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+def category_update(request, id):
+    try:
+        category = Category.objects.get(id=id)
+    except Category.DoesNotExist:
+        return Response({'error': 'Категория не найдена.'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = CategoryCreateSerializer(category, data=request.data, partial=True)
+    if serializer.is_valid():
+        category = serializer.save()
+        return Response(CategoryCreateSerializer(category).data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 def task_statistics(request):
