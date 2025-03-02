@@ -7,7 +7,7 @@ urlpatterns = [
     path('categories/create/', category_create, name='category-create'),
     path('categories/<int:id>/update/', category_update, name='category-update'),
     path('tasks/statistics/', task_statistics, name="task-statistics"),
-
+    path('/tasks/<int:id>/', task_detail, name='task-detail'),
 ]
 
 

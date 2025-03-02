@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from .models import Task, SubTask, Category
 
-
+### TASK
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
@@ -14,7 +14,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         model = Task
         fields = '__all__'
 
-
+### CATEGORY
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -46,9 +46,16 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
+### SUBTASK
 class SubTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubTask
         fields = ['title', 'description', 'status', 'deadline']
         read_only_fields = ['created_at']
+
+class TaskDetailSerializer(serializers.ModelSerializer):
+    subtasks = SubTaskSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Task
+        fields = ['id', 'title', 'description', 'subtasks']
