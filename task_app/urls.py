@@ -1,28 +1,18 @@
 from django.urls import path
 from .views import (
-    tasks_list_create,
-    task_detail,
-    category_create,
-    category_update,
-    task_statistics
+    TaskListCreateView,
+    TaskDetailView,
+    CategoryCreateView,
+    CategoryUpdateView,
+    TaskStatisticsView,
+    SubTaskListView
 )
 
 urlpatterns = [
-    # Получение списка задач и создание новой задачи
-    path("tasks/", tasks_list_create, name="task-list-create"),
-
-    # Получение детальной информации о задаче по ID
-    path("tasks/<int:task_id>/", task_detail, name="task-detail"),
-
-    # Создание новой категории
-    path('categories/create/', category_create, name='category-create'),
-
-    # Обновление категории по ID
-    path('categories/<int:id>/update/', category_update, name='category-update'),
-
-    # Получение статистики по задачам
-    path('tasks/statistics/', task_statistics, name="task-statistics"),
+    path('tasks/', TaskListCreateView.as_view(), name='task-list-create'),
+    path('tasks/<int:id>/', TaskDetailView.as_view(), name='task-detail'),
+    path('categories/create/', CategoryCreateView.as_view(), name='category-create'),
+    path('categories/<int:id>/update/', CategoryUpdateView.as_view(), name='category-update'),
+    path('tasks/statistics/', TaskStatisticsView.as_view(), name='task-statistics'),
+    path('subtasks/', SubTaskListView.as_view(), name='subtask-list'),
 ]
-
-
-
