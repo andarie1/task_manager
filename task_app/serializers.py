@@ -31,26 +31,6 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
 
-    def create(self, validated_data):
-        name = validated_data.get('name')
-
-        if Category.objects.filter(name).exists():
-            raise ValidationError(f'Категория с названием "{name}" уже существует.')
-
-        category = Category.objects.create(**validated_data)
-        return category
-
-    def update(self, instance, validated_data):
-        new_name = validated_data.get('name', instance.name).title()
-
-        if Category.objects.filter(name=new_name).exclude(id=instance.id).exists():
-            raise ValidationError(f'Категория с названием "{new_name}" уже существует.')
-
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        instance.save()
-        return instance
 
 ### SUBTASK
 class SubTaskSerializer(serializers.ModelSerializer):

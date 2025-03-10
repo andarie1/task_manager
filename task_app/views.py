@@ -65,6 +65,15 @@ class CategoryCreateView(generics.CreateAPIView):
     serializer_class = CategoryCreateSerializer
     queryset = Category.objects.all()
 
+    def create(self, request, *args, **kwargs):
+        serializer = CategoryCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        category = serializer.save()
+        return Response(
+            {"message": "Category created successfully", "category_id": category.id},
+            status=status.HTTP_201_CREATED
+        )
+
 
 # ✅ Обновление категории
 class CategoryUpdateView(generics.UpdateAPIView):
@@ -73,6 +82,14 @@ class CategoryUpdateView(generics.UpdateAPIView):
     lookup_field = 'id'
     http_method_names = ['put']
 
+    def update(self, request, *args, **kwargs):
+        serializer = CategoryCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        category = serializer.save()
+        return Response(
+            {"message": "Category updated successfully", "category_id": category.id},
+            status=status.HTTP_200_OK
+        )
 
 # ✅ Статистика по задачам
 class TaskStatisticsView(generics.GenericAPIView):
