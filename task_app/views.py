@@ -1,6 +1,5 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from django.utils.timezone import now
 from django.db.models import Count
 from rest_framework.pagination import PageNumberPagination
@@ -14,14 +13,14 @@ from .serializers import (
 )
 
 
-# Пагинация для всех списков
+# ✅ Универсальная пагинация
 class DefaultPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
 
 
-# Словарь дней недели
+# ✅ Словарь дней недели
 DAYS_OF_WEEK = {
     "воскресенье": 1,
     "понедельник": 2,
@@ -33,7 +32,7 @@ DAYS_OF_WEEK = {
 }
 
 
-# ✅ Список задач с фильтром по дню недели + пагинация
+# ✅ Список задач с фильтром по дню недели
 class TaskListCreateView(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
     pagination_class = DefaultPagination
@@ -67,7 +66,7 @@ class CategoryCreateView(generics.CreateAPIView):
     queryset = Category.objects.all()
 
 
-# ✅ Обновление категории (PUT)
+# ✅ Обновление категории
 class CategoryUpdateView(generics.UpdateAPIView):
     serializer_class = CategoryCreateSerializer
     queryset = Category.objects.all()
@@ -76,7 +75,7 @@ class CategoryUpdateView(generics.UpdateAPIView):
 
 
 # ✅ Статистика по задачам
-class TaskStatisticsView(APIView):
+class TaskStatisticsView(generics.GenericAPIView):
     def get(self, request):
         total_tasks = Task.objects.count()
         status_counts = Task.objects.values('status').annotate(count=Count('status'))
@@ -92,8 +91,8 @@ class TaskStatisticsView(APIView):
         })
 
 
-# ✅ Список подзадач с пагинацией
-class SubTaskListView(generics.ListAPIView):
+# ✅ Единый класс: Список + создание подзадач (без дублирования)
+class SubTaskListCreateView(generics.ListCreateAPIView):
     queryset = SubTask.objects.all()
     serializer_class = SubTaskSerializer
     pagination_class = DefaultPagination
@@ -101,10 +100,50 @@ class SubTaskListView(generics.ListAPIView):
     def get_queryset(self):
         queryset = SubTask.objects.all()
         task_name = self.request.query_params.get('task_name')
-        status = self.request.query_params.get('status')
-
-        if task_name:
+        subtask_status = self.request.query_params.get('status')
+        if task_name and subtask_status:
+            queryset = queryset.filter(
+                task__name__icontains=task_name,
+                status=subtask_status
+            )
+        elif task_name:
             queryset = queryset.filter(task__name__icontains=task_name)
-        if status:
-            queryset = queryset.filter(status=status)
+        elif subtask_status:
+            queryset = queryset.filter(status=subtask_status)
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        subtask = serializer.save()
+        return Response(
+            {"message": "Subtask created successfully", "subtask_id": subtask.id},
+            status=status.HTTP_201_CREATED
+        )
+
+
+# ✅ Единый класс: Получение, обновление, удаление подзадачи (без дублирования)
+class SubTaskDetailUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = SubTask.objects.all()
+    serializer_class = SubTaskSerializer
+    lookup_field = 'id'
+
+    def retrieve(self, request, *args, **kwargs):
+        subtask = self.get_object()
+        serializer = self.get_serializer(subtask)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def update(self, request, *args, **kwargs):
+        subtask = self.get_object()
+        serializer = self.get_serializer(subtask, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"message": "Subtask updated successfully", "subtask_id": subtask.id},
+            status=status.HTTP_200_OK
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        subtask = self.get_object()
+        subtask.delete()
+        return Response({"message": "Subtask deleted successfully"}, status=status.HTTP_204_NO_CONTENT)

@@ -1,4 +1,5 @@
 from django.template.defaultfilters import title
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from .models import Task, SubTask, Category
@@ -7,18 +8,23 @@ from .models import Task, SubTask, Category
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ['title', 'description', 'status', 'deadline']
+        fields = '__all__'
 
 class TaskCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
 
+    def validate_deadline(self, value):
+        if value < timezone.now():
+            raise serializers.ValidationError("Deadline не может быть в прошлом")
+        return value
+
 ### CATEGORY
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id','name']
+        fields = ['id', 'name']
 
 class CategoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,19 +32,19 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        title = validated_data.get('title')
+        name = validated_data.get('name')
 
-        if Category.objects.filter(title=title).exists():
-            raise ValidationError(f'Категория с названием "{title}" уже существует.')
+        if Category.objects.filter(name).exists():
+            raise ValidationError(f'Категория с названием "{name}" уже существует.')
 
         category = Category.objects.create(**validated_data)
         return category
 
     def update(self, instance, validated_data):
-        new_title = validated_data.get('title', instance.title)
+        new_name = validated_data.get('name', instance.name).title()
 
-        if Category.objects.filter(title=new_title).exclude(id=instance.id).exists():
-            raise ValidationError(f'Категория с названием "{new_title}" уже существует.')
+        if Category.objects.filter(name=new_name).exclude(id=instance.id).exists():
+            raise ValidationError(f'Категория с названием "{new_name}" уже существует.')
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
