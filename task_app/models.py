@@ -7,6 +7,7 @@ class Category(models.Model):
     class Meta:
         db_table = 'task_manager_category'
         verbose_name = 'Category'
+        verbose_name_plural = 'Categories'
         unique_together = (('name', 'name'),)
 
     def __str__(self):
