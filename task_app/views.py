@@ -9,7 +9,7 @@ from .serializers import (
     TaskCreateSerializer,
     CategoryCreateSerializer,
     TaskDetailSerializer,
-    SubTaskSerializer
+    SubTaskSerializer, CategorySerializer
 )
 
 
@@ -60,7 +60,12 @@ class TaskDetailView(generics.RetrieveAPIView):
     lookup_field = 'id'
 
 
-# ✅ Создание категории
+# ✅ Получение/Создание категории
+class CategoryListView(generics.ListAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategoryCreateSerializer
+    pagination_class = DefaultPagination
+
 class CategoryCreateView(generics.CreateAPIView):
     serializer_class = CategoryCreateSerializer
     queryset = Category.objects.all()
@@ -118,16 +123,14 @@ class SubTaskListCreateView(generics.ListCreateAPIView):
         queryset = SubTask.objects.all()
         task_name = self.request.query_params.get('task_name')
         subtask_status = self.request.query_params.get('status')
-        if task_name and subtask_status:
-            queryset = queryset.filter(
-                task__name__icontains=task_name,
-                status=subtask_status
-            )
-        elif task_name:
-            queryset = queryset.filter(task__name__icontains=task_name)
-        elif subtask_status:
+
+        if task_name:
+            queryset = queryset.filter(task__title__icontains=task_name)
+        if subtask_status:
             queryset = queryset.filter(status=subtask_status)
+
         return queryset
+
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

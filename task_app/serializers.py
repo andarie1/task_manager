@@ -36,7 +36,7 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
 class SubTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubTask
-        fields = ['title', 'description', 'status', 'deadline']
+        fields = ['id', 'title', 'description', 'status', 'deadline', 'task', 'created_at']
         read_only_fields = ['created_at']
 
 class TaskDetailSerializer(serializers.ModelSerializer):
