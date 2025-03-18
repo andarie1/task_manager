@@ -7,6 +7,7 @@ class Category(models.Model):
     class Meta:
         db_table = 'task_manager_category'
         verbose_name = 'Category'
+        verbose_name_plural = 'Categories'
         unique_together = (('name', 'name'),)
 
     def __str__(self):
@@ -23,13 +24,13 @@ class Task(models.Model):
 
     title = models.CharField(max_length=255)
     description = models.TextField()
-    categories = models.ManyToManyField(Category, related_name='tasks')
+    categories = models.ManyToManyField(Category, related_name='tasks', blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
-    deadline = models.DateTimeField()
+    deadline = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def short_title(self):
-        title_clean = self.title.strip()  # Убираем лишние пробелы
+        title_clean = self.title.strip()
         return f"{title_clean[:10]}..." if len(title_clean) > 10 else title_clean
 
     short_title.short_description = "Short Title"
