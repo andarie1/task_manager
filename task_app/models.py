@@ -24,9 +24,9 @@ class Task(models.Model):
 
     title = models.CharField(max_length=255)
     description = models.TextField()
-    categories = models.ManyToManyField(Category, related_name='tasks')
+    categories = models.ManyToManyField(Category, related_name='tasks', blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
-    deadline = models.DateTimeField()
+    deadline = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def short_title(self):

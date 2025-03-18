@@ -1,7 +1,4 @@
 from django.urls import path
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
-from rest_framework import permissions
 from .views import (
     TaskListCreateView,
     TaskDetailView,
@@ -14,22 +11,7 @@ from .views import (
     TaskRetrieveUpdateDestroyAPIView
 )
 
-schema_view = get_schema_view(
-    openapi.Info(
-        title="Task Manager API",
-        default_version='v1',
-        description="API для управления задачами и подзадачами",
-        contact=openapi.Contact(email="123@email.com"),
-        license=openapi.License(name="BSD License"),
-    ),
-    public=True,
-    permission_classes=[permissions.AllowAny],
-)
-
 urlpatterns = [
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-
     # Task
     path('tasks/', TaskListCreateView.as_view(), name='task-list-create'),
     path('tasks/<int:pk>/', TaskRetrieveUpdateDestroyAPIView.as_view(), name='task-detail-update-delete'),
@@ -45,6 +27,3 @@ urlpatterns = [
     path('subtasks/', SubTaskListCreateView.as_view(), name='subtask-list-create'),
     path('subtasks/<int:id>/', SubTaskDetailUpdateDeleteView.as_view(), name='subtask-detail-update-delete'),
 ]
-
-
-

@@ -62,7 +62,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
 # ✅ Получение, обновление, удаление задачи
 class TaskRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
-    serializer_class = TaskCreateSerializer  # Можно оставить или использовать TaskSerializer для разных целей
+    serializer_class = TaskCreateSerializer
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

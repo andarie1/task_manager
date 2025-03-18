@@ -1,7 +1,5 @@
-from django.template.defaultfilters import title
 from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from .models import Task, SubTask, Category
 
 ### TASK
@@ -11,14 +9,20 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TaskCreateSerializer(serializers.ModelSerializer):
+    deadline = serializers.DateTimeField(required=False, allow_null=True)
+    categories = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Category.objects.all(), required=False
+    )
+
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = ['id', 'title', 'description', 'deadline', 'categories']
 
     def validate_deadline(self, value):
-        if value < timezone.now():
-            raise serializers.ValidationError("Deadline не может быть в прошлом")
+        if value and value < timezone.now():
+            raise serializers.ValidationError("Deadline не может быть в прошлом.")
         return value
+
 
 ### CATEGORY
 class CategorySerializer(serializers.ModelSerializer):

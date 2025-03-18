@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'task_app',
-    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -114,5 +113,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ]
 }
+
+LOGIN_REDIRECT_URL = "/"
+
 
 
