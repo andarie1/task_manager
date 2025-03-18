@@ -30,7 +30,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def short_title(self):
-        title_clean = self.title.strip()  # Убираем лишние пробелы
+        title_clean = self.title.strip()
         return f"{title_clean[:10]}..." if len(title_clean) > 10 else title_clean
 
     short_title.short_description = "Short Title"
