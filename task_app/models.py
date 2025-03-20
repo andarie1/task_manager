@@ -2,21 +2,27 @@ from django.db import models
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
+    is_deleted = models.BooleanField(default=False)
 
-    class Meta:
-        db_table = 'task_manager_category'
-        verbose_name = 'Category'
-        verbose_name_plural = 'Categories'
-        unique_together = (('name', 'name'),)
+    def soft_delete(self):
+        """Мягкое удаление категории"""
+        self.is_deleted = True
+        self.save(update_fields=['is_deleted'])
+
+    def restore(self):
+        """Восстановление категории"""
+        self.is_deleted = False
+        self.save(update_fields=['is_deleted'])
 
     def __str__(self):
         return self.name
 
+
 class Task(models.Model):
     STATUS_CHOICES = [
         ('new', 'New'),
-        ('in_progress', 'In progress'),
+        ('in_progress', 'In Progress'),
         ('pending', 'Pending'),
         ('blocked', 'Blocked'),
         ('done', 'Done'),
@@ -29,16 +35,9 @@ class Task(models.Model):
     deadline = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def short_title(self):
-        title_clean = self.title.strip()
-        return f"{title_clean[:10]}..." if len(title_clean) > 10 else title_clean
-
-    short_title.short_description = "Short Title"
-
     class Meta:
         db_table = 'task_manager_task'
         ordering = ['-created_at']
-        verbose_name = 'Task'
         unique_together = ('title', 'deadline')
 
     def __str__(self):
@@ -48,7 +47,7 @@ class Task(models.Model):
 class SubTask(models.Model):
     STATUS_CHOICES = [
         ('new', 'New'),
-        ('in_progress', 'In progress'),
+        ('in_progress', 'In Progress'),
         ('pending', 'Pending'),
         ('blocked', 'Blocked'),
         ('done', 'Done'),
@@ -64,8 +63,8 @@ class SubTask(models.Model):
     class Meta:
         db_table = 'subtask_manager_subtask'
         ordering = ['-created_at']
-        verbose_name = 'Subtask'
         unique_together = ('title', 'deadline')
 
     def __str__(self):
         return self.title
+

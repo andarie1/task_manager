@@ -28,12 +28,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name']
-
-class CategoryCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = '__all__'
+        fields = ['id', 'name', 'is_deleted']
 
 
 ### SUBTASK
