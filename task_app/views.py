@@ -4,13 +4,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status, filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
 from .models import Task, Category, SubTask
 from .serializers import TaskSerializer, TaskCreateSerializer, TaskDetailSerializer, CategorySerializer, SubTaskSerializer
 from .pagination import DefaultPagination
 
 DAYS_OF_WEEK = {"воскресенье": 1, "понедельник": 2, "вторник": 3, "среда": 4, "четверг": 5, "пятница": 6, "суббота": 7}
-
 
 class TaskListCreateView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
