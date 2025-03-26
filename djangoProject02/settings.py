@@ -1,5 +1,7 @@
 from pathlib import Path
 from environ import Env
+import os
+import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 
@@ -56,7 +58,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'djangoProject02.wsgi.application'
 
-# Database
 
 if env.bool('MYSQL', default=False):
     DATABASES = {
@@ -69,7 +70,7 @@ if env.bool('MYSQL', default=False):
             'PORT': env('DB_PORT'),
     }
 }
-else: # Connected to sqlite3
+else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -108,3 +109,47 @@ STATIC_URL = 'static/'
 # Default primary key field type
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Default pagination settings
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 5
+}
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} - {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'db_logs': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/db_logs.log'),
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['db_logs'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
+
+
+
+
+
+
+
+
