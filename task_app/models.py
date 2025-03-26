@@ -1,4 +1,5 @@
 from django.db import models
+from rest_framework.authtoken.admin import User
 
 
 class Category(models.Model):
@@ -34,6 +35,7 @@ class Task(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     deadline = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'task_manager_task'
