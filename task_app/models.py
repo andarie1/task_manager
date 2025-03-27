@@ -1,5 +1,4 @@
 from django.db import models
-from rest_framework.authtoken.admin import User
 from django.contrib.auth import get_user_model
 
 class Category(models.Model):
