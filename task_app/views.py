@@ -41,7 +41,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
 
 class TaskRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
-    serializer_class = TaskCreateSerializer
+    serializer_class = TaskDetailSerializer
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

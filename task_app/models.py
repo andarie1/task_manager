@@ -1,6 +1,6 @@
 from django.db import models
 from rest_framework.authtoken.admin import User
-
+from django.contrib.auth import get_user_model
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -35,7 +35,7 @@ class Task(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     deadline = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         db_table = 'task_manager_task'
