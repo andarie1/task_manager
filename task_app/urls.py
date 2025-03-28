@@ -27,6 +27,6 @@ urlpatterns = [
     path('subtasks/<int:id>/', SubTaskDetailUpdateDeleteView.as_view(), name='subtask-detail-update-delete'),
 
     # 🔹 Category маршруты (CRUD через ViewSet)
-    path('', include(router.urls)),  # 🔥 Подключаем автоматически созданные маршруты
+    path('', include(router.urls)),
 ]
 

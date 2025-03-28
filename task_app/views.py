@@ -4,21 +4,21 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status, filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Task, Category, SubTask
-from .serializers import TaskCreateSerializer, TaskDetailSerializer, CategorySerializer, SubTaskSerializer
-from .pagination import DefaultPagination
-from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from .models import Task, Category, SubTask
+from .serializers import (
+    TaskCreateSerializer, TaskDetailSerializer, CategorySerializer, SubTaskSerializer, TaskSerializer
+)
+from .pagination import DefaultPagination
 from .permissions import IsOwnerOrReadOnly
-from .serializers import TaskSerializer
 
 DAYS_OF_WEEK = {"воскресенье": 1, "понедельник": 2, "вторник": 3, "среда": 4, "четверг": 5, "пятница": 6, "суббота": 7}
+
 
 class TaskListCreateView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     pagination_class = DefaultPagination
-
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -28,20 +28,19 @@ class TaskListCreateView(generics.ListCreateAPIView):
     ordering = ['created_at']
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        day = self.request.query_params.get('day', '').lower()
-        return queryset.filter(created_at__week_day=DAYS_OF_WEEK[day]) if day in DAYS_OF_WEEK else queryset
+        return Task.objects.filter(owner=self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        serializer = TaskCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        task = serializer.save()
-        return Response({"message": "Task created successfully", "task_id": task.id}, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class TaskRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskDetailSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def get_queryset(self):
+        return Task.objects.filter(owner=self.request.user)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -55,15 +54,14 @@ class TaskRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
         return Response({"message": "Task deleted successfully", "task_id": instance.id}, status=status.HTTP_200_OK)
 
-
 class TaskDetailView(generics.RetrieveAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskDetailSerializer
     lookup_field = 'id'
 
-
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Category.objects.filter(is_deleted=False) if self.request.query_params.get('show_deleted') != 'true' else Category.objects.all()
@@ -86,17 +84,25 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 
 class TaskStatisticsView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        total_tasks = Task.objects.count()
-        status_counts = {item['status']: item['count'] for item in Task.objects.values('status').annotate(count=Count('status'))}
-        overdue_tasks = Task.objects.filter(deadline__lt=now(), status__in=['new', 'in_progress', 'pending']).count()
+        total_tasks = Task.objects.filter(owner=request.user).count()
+        status_counts = {
+            item['status']: item['count'] for item in Task.objects.filter(owner=request.user)
+            .values('status').annotate(count=Count('status'))
+        }
+        overdue_tasks = Task.objects.filter(
+            owner=request.user, deadline__lt=now(), status__in=['new', 'in_progress', 'pending']
+        ).count()
         return Response({"total_tasks": total_tasks, "status_counts": status_counts, "overdue_tasks": overdue_tasks})
 
 
 class SubTaskListCreateView(generics.ListCreateAPIView):
-    queryset = SubTask.objects.all()
     serializer_class = SubTaskSerializer
     pagination_class = DefaultPagination
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'deadline']
     search_fields = ['title', 'description']
@@ -104,7 +110,7 @@ class SubTaskListCreateView(generics.ListCreateAPIView):
     ordering = ['created_at']
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = SubTask.objects.filter(owner=self.request.user)
         task_name = self.request.query_params.get('task_name')
         subtask_status = self.request.query_params.get('status')
         if task_name:
@@ -113,17 +119,17 @@ class SubTaskListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(status=subtask_status)
         return queryset
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        subtask = serializer.save()
-        return Response({"message": "Subtask created successfully", "subtask_id": subtask.id}, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class SubTaskDetailUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubTask.objects.all()
     serializer_class = SubTaskSerializer
-    lookup_field = 'id'
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def get_queryset(self):
+        return SubTask.objects.filter(owner=self.request.user)
 
     def update(self, request, *args, **kwargs):
         subtask = self.get_object()
@@ -135,3 +141,4 @@ class SubTaskDetailUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         self.get_object().delete()
         return Response({"message": "Subtask deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
