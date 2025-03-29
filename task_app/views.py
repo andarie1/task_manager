@@ -1,19 +1,62 @@
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status, filters, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Task, Category, SubTask
 from .serializers import (
-    TaskCreateSerializer, TaskDetailSerializer, CategorySerializer, SubTaskSerializer, TaskSerializer
+    TaskCreateSerializer, TaskDetailSerializer, CategorySerializer, SubTaskSerializer, TaskSerializer,
+    CustomTokenObtainPairSerializer
 )
 from .pagination import DefaultPagination
 from .permissions import IsOwnerOrReadOnly
+from rest_framework import generics
+from rest_framework.permissions import AllowAny
+from .serializers import RegisterSerializer
+from django.contrib.auth.models import User
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({
+            "message": "User registered successfully",
+            "user_id": user.id,
+            "username": user.username,
+            "email": user.email
+        }, status=status.HTTP_201_CREATED)
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Выход выполнен"}, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
 
 DAYS_OF_WEEK = {"воскресенье": 1, "понедельник": 2, "вторник": 3, "среда": 4, "четверг": 5, "пятница": 6, "суббота": 7}
-
 
 class TaskListCreateView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
@@ -33,14 +76,20 @@ class TaskListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-
 class TaskRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskDetailSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
-    def get_queryset(self):
-        return Task.objects.filter(owner=self.request.user)
+    def get_object(self):
+        task_id = self.kwargs.get("pk")
+
+        if not task_id:
+            raise NotFound({"detail": "Task ID is missing in URL."})
+
+        obj = get_object_or_404(Task, id=task_id)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
