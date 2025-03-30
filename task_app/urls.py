@@ -1,21 +1,32 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+
 from .views import (
     TaskListCreateView,
+    TaskRetrieveUpdateDestroyAPIView,
     TaskDetailView,
-    CategoryCreateView,
-    CategoryUpdateView,
     TaskStatisticsView,
     SubTaskListCreateView,
-    SubTaskDetailUpdateDeleteView
+    SubTaskDetailUpdateDeleteView,
+    CategoryViewSet
 )
 
+# ✅ Создаем роутер и регистрируем ViewSet
+router = DefaultRouter()
+router.register(r'categories', CategoryViewSet, basename='category')
+
 urlpatterns = [
+    # 🔹 Task маршруты
     path('tasks/', TaskListCreateView.as_view(), name='task-list-create'),
-    path('tasks/<int:id>/', TaskDetailView.as_view(), name='task-detail'),
+    path('tasks/<int:pk>/', TaskRetrieveUpdateDestroyAPIView.as_view(), name='task-detail-update-delete'),
+    path('tasks/detail/<int:id>/', TaskDetailView.as_view(), name='task-detail'),
     path('tasks/statistics/', TaskStatisticsView.as_view(), name='task-statistics'),
-    path('categories/', CategoryCreateView.as_view(), name='category-create'),
-    path('categories/create/', CategoryCreateView.as_view(), name='category-create'),
-    path('categories/<int:id>/update/', CategoryUpdateView.as_view(), name='category-update'),
+
+    # 🔹 SubTask маршруты
     path('subtasks/', SubTaskListCreateView.as_view(), name='subtask-list-create'),
+    path('subtasks/<int:id>/', SubTaskDetailUpdateDeleteView.as_view(), name='subtask-detail-update-delete'),
+
+    # 🔹 Category маршруты (CRUD через ViewSet)
+    path('', include(router.urls)),
 ]
 
