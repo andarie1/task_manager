@@ -38,6 +38,20 @@ class Task(models.Model):
     deadline = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True, blank=True, related_name='tasks')
+    last_status = models.CharField(max_length=20, choices=STATUS_CHOICES, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        print("Task save method called")
+        if self.pk:
+            old_task = Task.objects.get(pk=self.pk)
+            print(f"old_task.status: {old_task.status}, self.status: {self.status}")
+            if old_task.status != self.status:
+                self.last_status = old_task.status
+                print(f"self.last_status: {self.last_status}")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
 
     class Meta:
         db_table = 'task_manager_task'

@@ -5,8 +5,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, status, filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from .models import Task, Category, SubTask
 from .serializers import (
     TaskCreateSerializer, TaskDetailSerializer, CategorySerializer, SubTaskSerializer, TaskSerializer,
@@ -24,7 +22,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
-
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [AllowAny]
@@ -40,6 +37,7 @@ class RegisterView(generics.CreateAPIView):
             "username": user.username,
             "email": user.email
         }, status=status.HTTP_201_CREATED)
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -93,8 +91,10 @@ class TaskRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        print(f"request.data: {request.data}")
         serializer = TaskCreateSerializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
+        print(f"serializer.validated_data: {serializer.validated_data}")
         serializer.save()
         return Response({"message": "Task updated successfully", "task_id": instance.id}, status=status.HTTP_200_OK)
 
@@ -181,11 +181,11 @@ class SubTaskDetailUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
         return SubTask.objects.filter(owner=self.request.user)
 
     def update(self, request, *args, **kwargs):
-        subtask = self.get_object()
-        serializer = self.get_serializer(subtask, data=request.data, partial=True)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"message": "Subtask updated successfully", "subtask_id": subtask.id}, status=status.HTTP_200_OK)
+        return Response({"message": "Subtask updated successfully", "subtask_id": instance.id}, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         self.get_object().delete()
