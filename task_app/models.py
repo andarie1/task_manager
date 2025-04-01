@@ -50,9 +50,6 @@ class Task(models.Model):
                 print(f"self.last_status: {self.last_status}")
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.title
-
     class Meta:
         db_table = 'task_manager_task'
         ordering = ['-created_at']
