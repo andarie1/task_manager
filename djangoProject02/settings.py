@@ -56,7 +56,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'djangoProject02.wsgi.application'
 
-# Database
 
 if env.bool('MYSQL', default=False):
     DATABASES = {
@@ -69,7 +68,7 @@ if env.bool('MYSQL', default=False):
             'PORT': env('DB_PORT'),
     }
 }
-else: # Connected to sqlite3
+else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -108,3 +107,14 @@ STATIC_URL = 'static/'
 # Default primary key field type
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ]
+}
+
+LOGIN_REDIRECT_URL = "/"
+
+
+
