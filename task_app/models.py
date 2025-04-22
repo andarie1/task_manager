@@ -1,22 +1,31 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 User = get_user_model()
 
+class CategoryManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
 
-class Category(models.Model):
+
+class Category(models.Model): # UPDATED
     name = models.CharField(max_length=255)
     is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
-    def soft_delete(self):
-        """Мягкое удаление категории"""
+    objects = CategoryManager()        # показываем только НЕ удалённые
+    all_objects = models.Manager()     # для получения всех, включая удалённые
+
+    def delete(self, using=None, keep_parents=False):
         self.is_deleted = True
-        self.save(update_fields=['is_deleted'])
+        self.deleted_at = timezone.now()
+        self.save()
 
     def restore(self):
-        """Восстановление категории"""
         self.is_deleted = False
-        self.save(update_fields=['is_deleted'])
+        self.deleted_at = None
+        self.save()
 
     def __str__(self):
         return self.name

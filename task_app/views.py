@@ -2,7 +2,7 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, status, filters, viewsets
+from rest_framework import status, filters, viewsets, generics
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from .models import Task, Category, SubTask
@@ -12,7 +12,6 @@ from .serializers import (
 )
 from .pagination import DefaultPagination
 from .permissions import IsOwnerOrReadOnly
-from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from .serializers import RegisterSerializer
 from django.contrib.auth.models import User
@@ -109,28 +108,25 @@ class TaskDetailView(generics.RetrieveAPIView):
     lookup_field = 'id'
 
 class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Category.objects.filter(is_deleted=False) if self.request.query_params.get('show_deleted') != 'true' else Category.objects.all()
+    def get_queryset(self): #UPDATED
+        # только активные категории
+        if self.request.query_params.get('include_deleted') == 'true':
+            return Category.all_objects.all()
+        return Category.objects.all()
 
-    @action(detail=True, methods=['post'])
-    def soft_delete(self, request, pk=None):
-        category = Category.objects.filter(pk=pk, is_deleted=False).first()
-        if category:
-            category.soft_delete()
-            return Response({"message": "Category soft deleted successfully"}, status=status.HTTP_200_OK)
-        return Response({"error": "Category not found or already deleted"}, status=status.HTTP_404_NOT_FOUND)
-
-    @action(detail=True, methods=['post'])
-    def restore(self, request, pk=None):
-        category = Category.objects.filter(pk=pk, is_deleted=True).first()
-        if category:
-            category.restore()
-            return Response({"message": "Category restored successfully"}, status=status.HTTP_200_OK)
-        return Response({"error": "Category not found or already active"}, status=status.HTTP_404_NOT_FOUND)
-
+    @action(detail=True, methods=['get'], url_path='count_tasks')
+    def count_tasks(self, request, pk=None):
+        category = self.get_object()
+        task_count = category.tasks.filter(owner=request.user).count()
+        return Response({
+            "category_id": category.id,
+            "category_name": category.name,
+            "tasks_count": task_count
+        })
 
 class TaskStatisticsView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
