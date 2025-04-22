@@ -116,8 +116,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 5
 }
-
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -135,11 +133,28 @@ LOGGING = {
             'formatter': 'verbose',
             'encoding': 'utf-8',
         },
+        'http_logs': {  #ADDED HTTP LOGS
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/http_requests.log'),
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
     },
     'loggers': {
         'django.db.backends': {
             'handlers': ['db_logs'],
             'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django.request': {  #ADDED
+            'handlers': ['http_logs'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['http_logs'],
+            'level': 'INFO',
             'propagate': False,
         },
     },
