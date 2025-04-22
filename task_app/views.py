@@ -36,18 +36,6 @@ class TaskRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskCreateSerializer
 
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = TaskCreateSerializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"message": "Task updated successfully", "task_id": instance.id}, status=status.HTTP_200_OK)
-
-    def delete(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response({"message": "Task deleted successfully", "task_id": instance.id}, status=status.HTTP_200_OK)
-
 
 class TaskDetailView(generics.RetrieveAPIView):
     queryset = Task.objects.all()
